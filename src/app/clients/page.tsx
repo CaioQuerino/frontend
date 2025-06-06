@@ -65,7 +65,7 @@ export default function ClientsPage(): JSX.Element {
   const createClient = useMutation({
     mutationFn: (newClient: ClientFormData) => api.post('/api/clients', newClient),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clients'])
+      queryClient.invalidateQueries({ queryKey: ['clients'] })
       reset()
       toast.success('Cliente cadastrado com sucesso!')
     },
@@ -78,9 +78,10 @@ export default function ClientsPage(): JSX.Element {
   const deleteClient = useMutation({
     mutationFn: (id: number) => api.delete(`/api/clients/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries(['clients'])
+      queryClient.invalidateQueries({ queryKey: ['clients'] })
       toast.success('Cliente removido com sucesso!')
-    },
+},
+
     onError: (error: any) => {
       toast.error(error.response?.data?.error || 'Erro ao remover cliente')
     }
@@ -145,8 +146,9 @@ export default function ClientsPage(): JSX.Element {
             {errors.status && <p className="text-red-500 text-sm mt-1">{errors.status.message}</p>}
           </div>
         </div>
-        <Button className='cursor-pointer' type="submit" disabled={createClient.isLoading}>
-          {createClient.isLoading ? 'Cadastrando...' : 'Cadastrar Cliente'}
+        <Button className='cursor-pointer' type="submit" >{createClient.status === 'pending'}
+
+        {createClient.status === 'pending' ? 'Cadastrando...' : 'Cadastrar Cliente'}
         </Button>
       </form>
 
@@ -182,15 +184,19 @@ export default function ClientsPage(): JSX.Element {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                      <Button
-                        className='bg-red-400 cursor-pointer'
-                        size="sm"
-                        onClick={() => handleDelete(client.id, client.name)}
-                        disabled={deleteClient.isLoading}
-                      >
-                        {deleteClient.isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 size={16} className="mr-1" />}
-                        Remover
-                      </Button>
+                  <Button
+                    className='bg-red-400 cursor-pointer'
+                    size="sm"
+                    onClick={() => handleDelete(client.id, client.name)}
+                    disabled={deleteClient.status === 'pending'}
+                  >
+                    {deleteClient.status === 'pending'
+                      ? <Loader2 className="h-4 w-4 animate-spin" />
+                      : <Trash2 size={16} className="mr-1" />
+                    }
+                    Remover
+                  </Button>
+
                     </td>
                     <td className="px-6 py-4">
                       <Link href={`/clients/${client.id}/assets`}>
