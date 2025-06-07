@@ -8,10 +8,17 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
-import { useEffect, useState, Fragment, JSX } from 'react'
+import { useEffect, useState, Fragment } from 'react'
 import { Trash2, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
 import Link from 'next/link'
 import '../globals.css'
+
+type Asset = {
+  id: number
+  name: string
+  value: number
+  clientId: number
+}
 
 type Client = {
   id: number
@@ -19,13 +26,6 @@ type Client = {
   email: string
   status: 'active' | 'inactive'
   assets: Asset[]
-}
-
-type Asset = {
-  id: number
-  name: string
-  value: number
-  clientId: number
 }
 
 const clientSchema = z.object({
@@ -38,7 +38,7 @@ const clientSchema = z.object({
 
 type ClientFormData = z.infer<typeof clientSchema>
 
-export default function ClientsPage(): JSX.Element {
+export default function ClientsPage() {
   const [isMounted, setIsMounted] = useState(false)
   const [expandedClient, setExpandedClient] = useState<number | null>(null)
   const queryClient = useQueryClient()
@@ -80,8 +80,7 @@ export default function ClientsPage(): JSX.Element {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] })
       toast.success('Cliente removido com sucesso!')
-},
-
+    },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || 'Erro ao remover cliente')
     }
@@ -105,8 +104,13 @@ export default function ClientsPage(): JSX.Element {
     setIsMounted(true)
   }, [])
 
-  if (!isMounted || isLoading) return <div className="p-8">Carregando...</div>
-  if (isError) return <div className="p-8 text-red-500">Erro ao carregar clientes</div>
+  if (!isMounted || isLoading) {
+    return <div className="p-8">Carregando...</div>
+  }
+
+  if (isError) {
+    return <div className="p-8 text-red-500">Erro ao carregar clientes</div>
+  }
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
@@ -146,9 +150,8 @@ export default function ClientsPage(): JSX.Element {
             {errors.status && <p className="text-red-500 text-sm mt-1">{errors.status.message}</p>}
           </div>
         </div>
-        <Button className='cursor-pointer' type="submit" >{createClient.status === 'pending'}
-
-        {createClient.status === 'pending' ? 'Cadastrando...' : 'Cadastrar Cliente'}
+        <Button className='cursor-pointer' type="submit" disabled={createClient.status === 'pending'}>
+          {createClient.status === 'pending' ? 'Cadastrando...' : 'Cadastrar Cliente'}
         </Button>
       </form>
 
@@ -184,19 +187,17 @@ export default function ClientsPage(): JSX.Element {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                  <Button
-                    className='bg-red-400 cursor-pointer'
-                    size="sm"
-                    onClick={() => handleDelete(client.id, client.name)}
-                    disabled={deleteClient.status === 'pending'}
-                  >
-                    {deleteClient.status === 'pending'
-                      ? <Loader2 className="h-4 w-4 animate-spin" />
-                      : <Trash2 size={16} className="mr-1" />
-                    }
-                    Remover
-                  </Button>
-
+                      <Button
+                        className='bg-red-400 cursor-pointer'
+                        size="sm"
+                        onClick={() => handleDelete(client.id, client.name)}
+                        disabled={deleteClient.status === 'pending'}
+                      >
+                        {deleteClient.status === 'pending'
+                          ? <Loader2 className="h-4 w-4 animate-spin" />
+                          : <><Trash2 size={16} className="mr-1" /> Remover</>
+                        }
+                      </Button>
                     </td>
                     <td className="px-6 py-4">
                       <Link href={`/clients/${client.id}/assets`}>
